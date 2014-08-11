@@ -56,6 +56,8 @@ $(TARGET_ELF): $(BUILD_DIR) $(LIBS) $(OBJECTS) $(LINK_SCRIPT)
 $(OBJECTS): $(BUILD_DIR)%.o: %.c
 	$(CC) $(CFLAGS) $^ -o $@
 
+$(LINK_SCRIPT): libopencm3_stm32f1.a
+
 libopencm3_stm32f1.a: lib/libopencm3/.git
 	cd lib/libopencm3; $(MAKE) lib/stm32/f1
 
