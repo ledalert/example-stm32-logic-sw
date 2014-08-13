@@ -1,11 +1,7 @@
 #Project settings
-PROJECT_NAME = template_f1
+PROJECT_NAME = logic_test
 SOURCES = main.c
 BUILD_DIR = build/
-
-#Debugging makefile
-DEBUG_PRINT ?= 0
-DEBUG_INDENT ?=
 
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)%.o)
 TARGET_ELF = $(BUILD_DIR)$(PROJECT_NAME).elf
@@ -23,18 +19,23 @@ SIZE = $(TOOLCHAIN)-size
 CPU_DEFINES = -mthumb -mcpu=cortex-m3 -msoft-float -DSTM32F1
 
 #Compiler options
-CFLAGS += -c -std=gnu99 -g -Os -Wall -fno-common -ffunction-sections
-CFLAGS += -fdata-sections -Wl,--gc-sections
-CFLAGS += -nostartfiles
+CFLAGS += -g -c -std=gnu99 -Os -Wall -fno-common -ffunction-sections
+CFLAGS += -fdata-sections -fPIC
 CFLAGS += $(CPU_DEFINES)
+
+INCLUDE_PATHS += -Ilib/libopencm3/include -Iinc
 
 LINK_SCRIPT = stm32f100x6.ld
 
-LINK_FLAGS = --static -nostartfiles -Llib/libopencm3/lib 
-LINK_FLAGS += -Llib/libopencm3/lib/stm32/f1 -Xlinker --gc-sections 
-LINK_FLAGS += -T$(LINK_SCRIPT) -lnosys -lopencm3_stm32f1
+LINK_FLAGS = --static -Llib/libopencm3/lib 
+LINK_FLAGS += -Llib/libopencm3/lib/stm32/f1 
+LINK_FLAGS += -T$(LINK_SCRIPT) -lopencm3_stm32f1
+LINK_FLAGS += -Wl,--gc-sections -nostartfiles -nodefaultlibs -nostdlib
 
 LIBS = libopencm3_stm32f1.a
+
+#Not used for now but we should add it
+DEBUG_FLAGS = -g   
 
 #Directories
 vpath %.c src
@@ -48,13 +49,13 @@ $(TARGET_BIN): $(TARGET_ELF)
 	$(OBJCOPY) -O binary $(TARGET_ELF) $(TARGET_BIN)
 
 $(BUILD_DIR):
-	mkdir $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
 
 $(TARGET_ELF): $(BUILD_DIR) $(LIBS) $(OBJECTS) $(LINK_SCRIPT)
-	$(CC) $(LINK_FLAGS) $(OBJECTS) -o $(TARGET_ELF)
+	$(CC) $(OBJECTS) $(LINK_FLAGS) -o $(TARGET_ELF)
 
 $(OBJECTS): $(BUILD_DIR)%.o: %.c
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(INCLUDE_PATHS) $^ -o $@
 
 $(LINK_SCRIPT): libopencm3_stm32f1.a
 
@@ -64,6 +65,7 @@ libopencm3_stm32f1.a: lib/libopencm3/.git
 lib/libopencm3/.git:
 	cd lib/libopencm3; git submodule init
 	cd lib/libopencm3; git submodule update
+	cd lib/libopencm3; git checkout "8fa7727b09c3ce5ef2ef93d1e3f8ba4959555783"
 
 clean:
 	rm -f $(OBJECTS) $(TARGET_ELF) $(TARGET_BIN)
