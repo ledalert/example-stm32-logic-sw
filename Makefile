@@ -65,7 +65,6 @@ libopencm3_stm32f1.a: lib/libopencm3/.git
 lib/libopencm3/.git:
 	cd lib/libopencm3; git submodule init
 	cd lib/libopencm3; git submodule update
-	cd lib/libopencm3; git checkout "8fa7727b09c3ce5ef2ef93d1e3f8ba4959555783"
 
 clean:
 	rm -f $(OBJECTS) $(TARGET_ELF) $(TARGET_BIN)
